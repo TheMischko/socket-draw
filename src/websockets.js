@@ -15,7 +15,6 @@ export const createWebSocketServer = (server) => {
 
         ws.on('message', (message) => {
             const parsed = JSON.parse(message);
-            console.log(parsed.event);
 
             if(parsed.event === "draw"){
                 onUserDraw(parsed, ws);

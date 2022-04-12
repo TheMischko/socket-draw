@@ -4,7 +4,7 @@ import fs from "fs";
 
 const {createCanvas, loadImage} = pkg;
 const canvasFilePath = "./public/canvas.png";
-console.log("canvas.js");
+
 /** @type {Canvas} */
 let canvas = null
 /** @type {NodeCanvasRenderingContext2D} */
