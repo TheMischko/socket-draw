@@ -1,21 +1,26 @@
 import pkg from 'canvas';
 import path from "path";
 import fs from "fs";
+import 'dotenv/config'
 
 const {createCanvas, loadImage} = pkg;
 const canvasFilePath = "./public/canvas.png";
+const WIDTH = Number(process.env.CVS_WIDTH);
+const HEIGHT = Number(process.env.CVS_HEIGHT);
 
 /** @type {Canvas} */
 let canvas = null
 /** @type {NodeCanvasRenderingContext2D} */
 let ctx = null;
+let saveTimeout = false;
 
 export const createVirtualCanvas = () => {
-    canvas = createCanvas(800, 600);
+    canvas = createCanvas(WIDTH, HEIGHT);
+    console.log([WIDTH, HEIGHT, canvas]);
     ctx = canvas.getContext('2d');
 
     loadImage(canvasFilePath).then((image) => {
-        ctx.drawImage(image, 50, 0, 70, 70);
+        ctx.drawImage(image, 0, 0, WIDTH, HEIGHT);
     }).catch((err) => {
         saveCanvas(canvas);
     });
@@ -29,7 +34,15 @@ export const drawOnCanvas = (drawData) => {
     ctx.moveTo(drawData.moveTo.x, drawData.moveTo.y);
     ctx.lineTo(drawData.lineTo.x, drawData.lineTo.y);
     ctx.stroke();
-    saveCanvas(canvas);
+    if(!saveTimeout){
+        saveTimeout = true;
+        setTimeout(() => {
+            saveTimeout = false;
+        },500);
+        saveCanvas(canvas);
+    }
+
+
 }
 
 /**

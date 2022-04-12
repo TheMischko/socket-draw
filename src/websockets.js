@@ -9,6 +9,7 @@ export const createWebSocketServer = (server) => {
     console.log("Websocket server created");
 
     wss.on('connection', (ws) => {
+        if(!ws) return;
         connections.add(ws);
         console.log("New connection", connections.size);
         onNewConnection(ws);
@@ -29,14 +30,19 @@ export const createWebSocketServer = (server) => {
     });
 }
 
-const onNewConnection = (currentCon) => {
+const sendConnectionSize = () => {
     const message = {
         event: "usersChanged",
         data: {
             userCount: connections.size
         }
     }
+    connections.forEach((connection) => {
+        connection.send(JSON.stringify(message));
+    });
+}
 
+const onNewConnection = (currentCon) => {
     try {
         currentCon.send(JSON.stringify({
             event: "imageInit",
@@ -46,15 +52,11 @@ const onNewConnection = (currentCon) => {
     } catch (ex){
         console.log(ex);
     }
-
-
-    connections.forEach((connection) => {
-        connection.send(JSON.stringify(message));
-    })
+    sendConnectionSize();
 };
 
 const onClosedConnection = () => {
-    onNewConnection();
+    sendConnectionSize();
 }
 
 const onUserDraw = (data, sender) => {
