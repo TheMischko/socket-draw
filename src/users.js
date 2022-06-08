@@ -34,7 +34,6 @@ userRouter.post("/login", async (req, res) => {
     try{
         const {login, password} = req.body;
         findUser(login).then((user) => {
-            console.log(user);
             crypto.pbkdf2(password, SALT, PSW_ITERATIONS, PSW_LENGTH, PSW_ALG, (err, hash) => {
                 if(err) res.send("Internal problem with hashing").status(400);
 
@@ -82,8 +81,16 @@ const createUser = async(login, password, email) => {
     });
 };
 
-const getUser = async(login, password) => {
-
+export const readToken = async(token) => {
+    return new Promise((resolve) => {
+        jwt.verify(token, privateKey, (err, decoded) => {
+            if(err) {
+                console.error(err);
+                resolve({"status": "invalid"})
+            }
+            resolve({"status": "valid", content: decoded})
+        });
+    })
 }
 
 export default userRouter;
