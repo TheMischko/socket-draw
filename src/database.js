@@ -19,3 +19,8 @@ export const findUser = async(login) => {
         db('users').where({login}).first().then((user) => resolve(user), (err) => reject(err));
     });
 }
+export const findUserByEmail = async(email) => {
+    return new Promise((resolve, reject) => {
+        db('users').where({email: email}).first().then((user) => resolve(user), (err) => reject(err));
+    });
+}

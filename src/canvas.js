@@ -38,11 +38,14 @@ export const drawOnCanvas = (drawData) => {
         saveTimeout = true;
         setTimeout(() => {
             saveTimeout = false;
-        },500);
+        },100);
         saveCanvas(canvas);
     }
+}
 
-
+export const clearCanvas = () => {
+    ctx.clearRect(0,0,WIDTH, HEIGHT);
+    saveCanvas(canvas);
 }
 
 /**

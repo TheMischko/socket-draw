@@ -1,6 +1,6 @@
 import express from "express";
 import crypto from "crypto";
-import { addNewUser, findUser } from "./database.js";
+import { addNewUser, findUser, findUserByEmail } from "./database.js";
 import jwt from 'jsonwebtoken';
 import 'dotenv/config';
 
@@ -21,9 +21,54 @@ const privateKey = process.env.JWT_PRIVATE;
 userRouter.post("/register", async (req, res) => {
     try{
         const {login, password, email} = req.body;
+        // Check if all data is set
+        if(!password || !login || !email){
+            res.send({
+                status: "error", 
+                message: "Didn't get all data.", 
+                err_key: "WRNG_ARG"}).status(200);
+                return;
+        }
+        //Check password length
+        if(password.length < 4){
+            res.send({
+                status: "error", 
+                message: "Password is too short.", 
+                err_key: "PSW_SHORT"}).status(200);
+                return;
+        }
+        //Check email
+        if(!validateEmail(email)){
+            res.send({
+                status: "error", 
+                message: "Email is not valid.", 
+                err_key: "MAIL_INVALID"}).status(200);
+                return;
+        }
+        // Check if login exists.
+        let user = await findUser(login);
+        if(user){
+            res.send({
+                status: "error", 
+                message: "User with that login exists.", 
+                err_key: "USR_LGN_EXSTS"}).status(200);
+                return;
+        }
+        // Check if email exists.
+        user = await findUserByEmail(email);
+        if(user){
+            res.send({
+                status: "error", 
+                message: "User with that email exists.", 
+                err_key: "USR_MAIL_EXSTS"}).status(200);
+                return;
+        }
+
         console.log(`Registering new user "${login}" with email "${email}" and password "${password}"`);
         const userToken = await createUser(login, password, email);
-        res.send({token: userToken}).status(201);
+        res.send({
+            status: "ok", 
+            token: userToken}).status(201);
 
     } catch(exception) {
         res.send("Error during parsing user information.").status(400);
@@ -33,7 +78,19 @@ userRouter.post("/register", async (req, res) => {
 userRouter.post("/login", async (req, res) => {
     try{
         const {login, password} = req.body;
+        if(!password || !login){
+            res.send({
+                status: "error", 
+                message: "Didn't get all data.", 
+                err_key: "WRNG_ARG"}).status(200);
+                return;
+        }
+             
         findUser(login).then((user) => {
+            if(!user){
+                res.send({status: "error", message: "Wrong login", err_key: "WRNG_LOGIN"});
+                return;
+            }
             crypto.pbkdf2(password, SALT, PSW_ITERATIONS, PSW_LENGTH, PSW_ALG, (err, hash) => {
                 if(err) res.send("Internal problem with hashing").status(400);
 
@@ -47,7 +104,7 @@ userRouter.post("/login", async (req, res) => {
                     res.send({status: "error", message: "Wrong password", err_key: "WRNG_PSW"});
                 }
             });
-        }, err => reject(err));
+        }, err => res.send({status: "error", message: "Wrong login", err_key: "WRNG_LOGIN"}));
 
     } catch(err) {
         res.send("Error during loging in.").status(400);
@@ -91,6 +148,14 @@ export const readToken = async(token) => {
             resolve({"status": "valid", content: decoded})
         });
     })
+}
+
+const validateEmail = (email) => {
+    return String(email)
+    .toLowerCase()
+    .match(
+      /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+    );
 }
 
 export default userRouter;

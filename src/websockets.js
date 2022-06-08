@@ -1,5 +1,5 @@
 import {WebSocketServer, WebSocket} from "ws";
-import {drawOnCanvas} from "./canvas.js";
+import {drawOnCanvas, clearCanvas} from "./canvas.js";
 import {readToken} from "./users.js";
 import fs from 'fs';
 
@@ -22,13 +22,11 @@ export const createWebSocketServer = (server) => {
         ws.on('message', async (message) => {
             // Parse JSON content of incomming message.
             const parsed = JSON.parse(message);
-            //console.log(parsed);
 
             // Initialize event handler
             if(parsed.event === "initialize"){
                 // Try to read incomming user token
                 const userData = await readToken(parsed.data.token);
-                console.log("userdata", userData);
                 // If the token is invalid send error message to connection.
                 if(userData.status === "invalid"){
                     ws.send(JSON.stringify({
@@ -42,6 +40,7 @@ export const createWebSocketServer = (server) => {
                     // Add it to dictionary of tokens and connections
                     if(!authorizedConnections[parsed.data.token]){
                         authorizedConnections[parsed.data.token] = ws;
+                        sendConnectionSize();
                     }
                     // Send user information to the connection.
                     ws.send(JSON.stringify({
@@ -61,6 +60,11 @@ export const createWebSocketServer = (server) => {
             else if(parsed.event === "draw"){
                 onUserDraw(parsed, ws);
             }
+
+            // Clear canvas handler
+            else if(parsed.event === "onClearCanvas"){
+                onClearCanvas(parsed, ws);
+            }
         });
 
         // On closed connection delete all stored data and inform other listeners.
@@ -75,11 +79,19 @@ export const createWebSocketServer = (server) => {
     });
 }
 
-const sendConnectionSize = () => {
+
+const sendConnectionSize = async () => {
+    const authorizedArray = Object.keys(authorizedConnections);
+    const names = [];
+    for(const connection of authorizedArray){
+        const user = await readToken(connection);
+        if(user) names.push(user.content.login);
+    }
     const message = {
         event: "usersChanged",
         data: {
-            userCount: connections.size
+            userCount: authorizedArray.length,
+            names: names
         }
     }
     connections.forEach((connection) => {
@@ -114,4 +126,21 @@ const onUserDraw = (data, sender) => {
        if(connection === sender) return;
        connection.send(JSON.stringify(data));
     });
+}
+
+const onClearCanvas = ({data}, sender) => {
+    if(!authorizedConnections[data.bearer]) {
+        console.error("Unauthorized clear!")
+        return
+    };
+    connections.forEach((connection) => {
+        if(connection === sender) return;
+        clearCanvas();
+        connection.send(JSON.stringify({
+            event: "onClearCanvas",
+            data: {
+                foreign: true
+            }
+        }));
+     });
 }
