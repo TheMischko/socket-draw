@@ -71,7 +71,10 @@ userRouter.post("/register", async (req, res) => {
             token: userToken}).status(201);
 
     } catch(exception) {
-        res.send("Error during parsing user information.").status(400);
+        console.error(exception);
+        res.send({
+            status: "error", 
+            message: "Error during parsing user information."}).status(400);
     };
 });
 

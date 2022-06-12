@@ -8,8 +8,7 @@ export const up = async function(knex) {
     table.string('login').notNullable();
     table.string('email').notNullable();
     table.string('password').notNullable();
-    table.timestamp('last_login');
-    table.timestamp('created_at').defaultTo(knex.fn.now());
+    table.timestamp('created_at');
   });
 };
 

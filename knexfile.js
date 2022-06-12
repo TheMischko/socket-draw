@@ -3,8 +3,8 @@ export default{
     connection: {
         host: "sql11.freemysqlhosting.net",
         port: 3306,
-        user: "root",
-        password: "root",
+        user: "sql11499219",
+        password: "UzQ9PwZZrr",
         database: "sql11499219"
     },
     useNullAsDefault: false,

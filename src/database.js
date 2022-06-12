@@ -9,7 +9,7 @@ export const addNewUser = async (login, password, email) => {
             login: login,
             password: password,
             email: email,
-            last_login: new Date()
+            created_at: new Date()
         }).then(() => resolve(), err => reject(err));
     })
 }
