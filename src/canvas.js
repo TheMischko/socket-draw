@@ -44,8 +44,18 @@ export const drawOnCanvas = (drawData) => {
 }
 
 export const clearCanvas = () => {
+    console.log("clear rect");
     ctx.clearRect(0,0,WIDTH, HEIGHT);
-    saveCanvas(canvas);
+    ctx.beginPath();
+    ctx.lineWidth = 5000;
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = "#FFFFFF";
+    ctx.moveTo(0, 0);
+    ctx.lineTo(WIDTH, HEIGHT);
+    ctx.stroke();
+    setTimeout(() => {
+        saveCanvas(canvas);
+    },100);
 }
 
 /**
